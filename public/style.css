@@ -1,0 +1,25 @@
+body {
+    margin: 0;
+    padding: 0;
+    -webkit-app-region: drag;
+    -webkit-user-select: none;
+    background: white;
+}
+
+canvas {
+    display: block;
+    position: absolute;
+    top: 50px;
+}
+
+#navbar {
+    padding: 10px;
+    font-size: 30px;
+    position: absolute;
+    background: white;
+}
+
+#title {
+    position: relative;
+    left: 10px;
+}

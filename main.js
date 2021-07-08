@@ -2,6 +2,10 @@
 const { app, BrowserWindow } = require('electron')
 const path = require('path')
 
+try {
+  require('electron-reloader')(module)
+} catch (_) {}
+
 require('electron-reload')(__dirname, {
   electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
 });
@@ -21,7 +25,7 @@ function createWindow() {
   })
 
   // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+  mainWindow.loadFile('public/index.html')
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
