@@ -1,7 +1,6 @@
 "use strict";
 
 function preload() {
-
     images = {
         'black': {
             'bishop': loadImage('pieces/bB.png'),
@@ -22,6 +21,10 @@ function preload() {
     }
 }
 
+var p1;
+var board;
+var floating = null;
+
 
 function setup() {
     const canvas = createCanvas(windowWidth, windowHeight - 50);
@@ -38,69 +41,80 @@ function setup() {
         height: windowHeight - 50
     }
 
-    // Colors
-    dark = color('#fdd')
-    light = color('#fff')
     bg = color('#e0e0e0')
+
+    // Colors
+    let darkColor = color('#fdd')
+    let lightColor = color('#fff')
+    let borderColor = color(100)
+
+    board = new Board(800, lightColor, darkColor, borderColor)
+    board.addPiece('black', 'king', where('c6'))
+    board.addPiece('black', 'knight', where('g6'))
+    board.addPiece('white', 'pawn', where('h4'))
+    board.addPiece('white', 'pawn', where('g2'))
+    board.addPiece('white', 'king', where('b1'))
+    board.addPiece('white', 'rook', where('d3'))
+    board.addPiece('black', 'bishop', where('b5'))
+    board.addPiece('white', 'queen', where('f5'))
+
+    console.log(board.getPieceLocations('white', 'pawn'))
 }
 
-
+var mouseDown, pMouseDown
   
 function draw() {
     background(bg)
     noStroke()
-    imageMode(CENTER)
 
-    let boardSize = tileSize * 8
+    pMouseDown = mouseDown
 
-    let boardCorner = {
-        x: center.x - (boardSize/2),
-        y: center.y - (boardSize/2),
-    }
+    mouseDown = mouseIsPressed
 
-    let padding = 5
-    let paddingColor = color(100)
-    let textColor = color(100)
-
-
-    fill(paddingColor)
-    rect(boardCorner.x - padding, boardCorner.y - padding, boardSize + 2*padding, boardSize + 2*padding)
-    fill(light)
-    rect(boardCorner.x, boardCorner.y, boardSize, boardSize)
-
-    
-    let cols = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
-
-    // Render Tiles + Text
-    textSize(Math.ceil(tileSize/5))
-    for (var row = 1; row <= 8; row++) {
-        for (var col = 1; col <= 8; col++) {
-            let pos = tilePos(row, col)
-            if (col % 2 == row % 2) {
-                fill(dark)
-            } else {
-                fill(light)
-            }
-
-            rect(pos.x, pos.y,tileSize, tileSize)
-
-            // Text
-            if (row == 1) {
-                fill(textColor)
-                text(cols[col-1], pos.x + tileSize - 18, pos.y + tileSize - 9)
-            }
-
-            if (col == 1) {
-                fill(textColor)
-                text(row, pos.x + 6, pos.y + 21)
+    if (mouseDown && !pMouseDown) {
+        var square = board.coordsToPos({x: mouseX, y: mouseY})
+        if (square != null) {
+            board.activeSquare = square
+            var pieceIndex = board.getIndexOnTile(square)
+            if (pieceIndex != -1) {
+                board.pieces[pieceIndex].hidden = true
+                floating = {
+                    color: board.pieces[pieceIndex].color,
+                    type: board.pieces[pieceIndex].type,
+                }
             }
         }
     }
-    
-    // Render Pieces
-    renderPieceCoords('white', 'rook', mouseX, mouseY)
-    renderPieceOnTile('black', 'king', 2, 5)
 
+    if (!mouseDown && pMouseDown) {
+        var square = board.coordsToPos({x: mouseX, y: mouseY})
+        if (square != null) {
+            let activePiece = board.getPieceOnTile(board.activeSquare)
+            if (activePiece != null) {
+                let result = board.movePiece(activePiece, square)
+                if (result == true) {
+                    board.pieces[board.getIndexOnTile(square)].hidden = false
+                } else {
+                    board.pieces[board.getIndexOnTile(board.activeSquare)].hidden = false
+                }
+            }
+        } else {
+            if (board.activeSquare != null) {
+                let index = board.getIndexOnTile(board.activeSquare)
+                if (index != -1) {
+                    board.pieces[board.getIndexOnTile(board.activeSquare)].hidden = false
+                }
+            }
+        }
+        floating = null
+    }
+
+    board.render(center)
+
+    // Floating piece
+    if (floating != null) {
+        board.renderPieceCoords(floating.color, floating.type, mouseX, mouseY)
+    }
 }
 
 function windowResized() {
